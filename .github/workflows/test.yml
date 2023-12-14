@@ -1,0 +1,30 @@
+name: Conditional Job Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      stages:
+        description: 'Enter stages to run (comma-separated)'
+        required: true
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.inputs.stages, 'stage1') }}
+    steps:
+      - name: Dummy Step 1
+        run: echo "Running stage 1"
+
+  job2:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.inputs.stages, 'stage2') }}
+    steps:
+      - name: Dummy Step 2
+        run: echo "Running stage 2"
+
+  job3:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.inputs.stages, 'stage3') }}
+    steps:
+      - name: Dummy Step 3
+        run: echo "Running stage 3"

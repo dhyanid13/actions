@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       stages:
-        description: 'Enter stages to run (comma-separated)'
+        description: 'Select stages to run'
         required: true
+        options: ['stage1', 'stage2', 'stage3'] # Define available options
 
 jobs:
   job1:

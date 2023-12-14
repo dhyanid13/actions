@@ -45,3 +45,10 @@ jobs:
     steps:
       - name: Dummy Step 5
         run: echo "Running stage 5, dependent on stage 2"
+
+  job6:
+    runs-on: ubuntu-latest
+    if: contains(github.event.inputs.stages, 'stage6')
+    steps:
+      - name: Dummy Step 6
+        run: echo "Running stage 6"

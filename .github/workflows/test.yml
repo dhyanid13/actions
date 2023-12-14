@@ -4,28 +4,44 @@ on:
   workflow_dispatch:
     inputs:
       stages:
-        description: 'Select stages to run'
+        description: 'Enter stages to run (comma-separated)'
         required: true
-        options: ['stage1', 'stage2', 'stage3'] # Define available options
 
 jobs:
   job1:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.inputs.stages, 'stage1') }}
+    if: contains(github.event.inputs.stages, 'stage1')
     steps:
       - name: Dummy Step 1
         run: echo "Running stage 1"
 
   job2:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.inputs.stages, 'stage2') }}
+    if: contains(github.event.inputs.stages, 'stage2')
     steps:
       - name: Dummy Step 2
         run: echo "Running stage 2"
 
   job3:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.inputs.stages, 'stage3') }}
+    if: contains(github.event.inputs.stages, 'stage3')
+    needs: job1
     steps:
       - name: Dummy Step 3
         run: echo "Running stage 3"
+
+  job4:
+    runs-on: ubuntu-latest
+    if: contains(github.event.inputs.stages, 'stage4')
+    needs: job1
+    steps:
+      - name: Dummy Step 4
+        run: echo "Running stage 4, dependent on stage 1"
+
+  job5:
+    runs-on: ubuntu-latest
+    if: contains(github.event.inputs.stages, 'stage5')
+    needs: job2
+    steps:
+      - name: Dummy Step 5
+        run: echo "Running stage 5, dependent on stage 2"

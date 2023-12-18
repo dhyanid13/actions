@@ -1,0 +1,71 @@
+name: File Update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update_file_job1:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: file-update
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Update File - Job 1
+        run: |
+          echo "Attempting to update file by Job 1..."
+          if mkdir lock; then
+            echo "Lock acquired by Job 1"
+            echo "Updating file by Job 1..."
+            # Your command to update the file goes here
+            sleep 10 # Simulating work
+            rmdir lock
+          else
+            echo "Job 1 couldn't acquire lock. Waiting for the lock to be released..."
+            exit 1
+          fi
+
+  update_file_job2:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: file-update
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Update File - Job 2
+        run: |
+          echo "Attempting to update file by Job 2..."
+          if mkdir lock; then
+            echo "Lock acquired by Job 2"
+            echo "Updating file by Job 2..."
+            # Your command to update the file goes here
+            sleep 10 # Simulating work
+            rmdir lock
+          else
+            echo "Job 2 couldn't acquire lock. Waiting for the lock to be released..."
+            exit 1
+          fi
+
+  update_file_job3:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: file-update
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Update File - Job 3
+        run: |
+          echo "Attempting to update file by Job 3..."
+          if mkdir lock; then
+            echo "Lock acquired by Job 3"
+            echo "Updating file by Job 3..."
+            # Your command to update the file goes here
+            sleep 10 # Simulating work
+            rmdir lock
+          else
+            echo "Job 3 couldn't acquire lock. Waiting for the lock to be released..."
+            exit 1
+          fi

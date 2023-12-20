@@ -1,10 +1,8 @@
 name: File Read-Edit Jobs
 
 on:
-  push:
-    branches:
-      - main
-
+  workflow_dispatch:
+  
 jobs:
   job1:
     runs-on: ubuntu-latest

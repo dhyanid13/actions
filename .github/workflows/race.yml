@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: concur-job-group
-      cancel-in-progress: true
+      cancel-in-progress: false
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -28,12 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: concur-job-group
-      cancel-in-progress: true
+      cancel-in-progress: false
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Read and Edit File
-        if: ${{ job1.outcome != 'cancelled' }}
         run: |
           # Reading the file
           cat ${{ github.workspace }}/file.txt
@@ -45,12 +44,11 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: concur-job-group
-      cancel-in-progress: true
+      cancel-in-progress: false
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Read and Edit File
-        if: ${{ job2.outcome != 'cancelled' }}
         run: |
           # Reading the file
           cat ${{ github.workspace }}/file.txt

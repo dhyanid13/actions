@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+      - name: Read File Before Edit
+        run: cat ${{ github.workspace }}/file.txt
       - name: Read and Edit File
         run: |
           # Reading the file
@@ -20,6 +22,8 @@ jobs:
 
           # Editing the file
           echo "Job 1 editing file" >> ${{ github.workspace }}/file.txt
+      - name: Read File After Edit
+        run: cat ${{ github.workspace }}/file.txt
 
   job2:
     runs-on: ubuntu-latest

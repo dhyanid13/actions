@@ -9,7 +9,7 @@ jobs:
   job1:
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-job-group
+      group: concur-job-group
     steps:
       - name: Read and Edit File
         run: |
@@ -22,7 +22,7 @@ jobs:
   job2:
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-job-group
+      group: concur-job-group
     steps:
       - name: Read and Edit File
         run: |
@@ -35,7 +35,7 @@ jobs:
   job3:
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-job-group
+      group: concur-job-group
     steps:
       - name: Read and Edit File
         run: |

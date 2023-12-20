@@ -35,6 +35,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Read and Edit File
+        if: ${{ job1.outcome != 'cancelled' }}
         run: |
           # Reading the file
           cat ${{ github.workspace }}/file.txt
@@ -51,6 +52,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Read and Edit File
+        if: ${{ job2.outcome != 'cancelled' }}
         run: |
           # Reading the file
           cat ${{ github.workspace }}/file.txt

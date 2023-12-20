@@ -1,0 +1,46 @@
+name: File Read-Edit Jobs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-job-group
+    steps:
+      - name: Read and Edit File
+        run: |
+          # Reading the file
+          cat ${{ github.workspace }}/file.txt
+
+          # Editing the file
+          echo "Job 1 editing file" >> ${{ github.workspace }}/file.txt
+
+  job2:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-job-group
+    steps:
+      - name: Read and Edit File
+        run: |
+          # Reading the file
+          cat ${{ github.workspace }}/file.txt
+
+          # Editing the file
+          echo "Job 2 editing file" >> ${{ github.workspace }}/file.txt
+
+  job3:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-job-group
+    steps:
+      - name: Read and Edit File
+        run: |
+          # Reading the file
+          cat ${{ github.workspace }}/file.txt
+
+          # Editing the file
+          echo "Job 3 editing file" >> ${{ github.workspace }}/file.txt

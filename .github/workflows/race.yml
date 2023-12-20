@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: concur-job-group
+      cancel-in-progress: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -29,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: concur-job-group
+      cancel-in-progress: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -44,6 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: concur-job-group
+      cancel-in-progress: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2

@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+    stages {
+        stage('Stage 1') {
+            steps {
+                script {
+                    // Generate random text
+                    def randomText = "Random text: " + UUID.randomUUID().toString()
+                    // Store the text in an environment variable for Stage 2 to access
+                    env.RANDOM_TEXT = randomText
+                }
+            }
+            post {
+                always {
+                    milestone()
+                }
+            }
+        }
+        stage('Stage 2') {
+            steps {
+                lock(resource: 'random-text-lock') {
+                    script {
+                        // Access the random text generated in Stage 1
+                        def textToUpdate = env.RANDOM_TEXT
+                        // Modify the text
+                        textToUpdate += "\nUpdated by Stage 2"
+                        // Update the environment variable with the modified text
+                        env.RANDOM_TEXT = textToUpdate
+                    }
+                }
+            }
+            post {
+                always {
+                    milestone()
+                }
+            }
+        }
+    }
+}

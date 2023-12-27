@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+    stages {
+        stage('Stage 1') {
+            steps {
+                script {
+                    writeFile file: "${env.HOME}/data.txt", text: "Initial content"
+                }
+            }
+            post {
+                always {
+                    milestone()
+                }
+            }
+        }
+        stage('Parallel Stage') {
+            parallel {
+                stage('Stage 2') {
+                    steps {
+                        lock('file-lock') {
+                            script {
+                                def stageNumber = 2
+                                def content = readFile("${env.HOME}/data.txt")
+                                content += "\nContent added by Stage ${stageNumber}"
+                                writeFile file: "${env.HOME}/data.txt", text: content
+                            }
+                        }
+                        post {
+                            always {
+                                milestone()
+                            }
+                        }
+                    }
+                }
+                stage('Stage 3') {
+                    steps {
+                        lock('file-lock') {
+                            script {
+                                def stageNumber = 3
+                                def content = readFile("${env.HOME}/data.txt")
+                                content += "\nContent added by Stage ${stageNumber}"
+                                writeFile file: "${env.HOME}/data.txt", text: content
+                            }
+                        }
+                        post {
+                            always {
+                                milestone()
+                            }
+                        }
+                    }
+                }
+                stage('Stage 4') {
+                    steps {
+                        lock('file-lock') {
+                            script {
+                                def stageNumber = 4
+                                def content = readFile("${env.HOME}/data.txt")
+                                content += "\nContent added by Stage ${stageNumber}"
+                                writeFile file: "${env.HOME}/data.txt", text: content
+                            }
+                        }
+                        post {
+                            always {
+                                milestone()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

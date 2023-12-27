@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+    stages {
+        stage('Stage 1') {
+            steps {
+                script {
+                    // Initialize a paragraph
+                    def paragraph = "Initial content"
+                    // Store the paragraph in an environment variable for later stages to access
+                    env.PARAGRAPH = paragraph
+                }
+            }
+        }
+        stage('Parallel Stage') {
+            parallel {
+                stage('Stage 2') {
+                    steps {
+                        lock('paragraph-lock') {
+                            script {
+                                def stageNumber = 2
+                                def paragraph = env.PARAGRAPH
+                                paragraph += "\nContent added by Stage ${stageNumber}"
+                                env.PARAGRAPH = paragraph
+                            }
+                        }
+                    }
+                }
+                stage('Stage 3') {
+                    steps {
+                        lock('paragraph-lock') {
+                            script {
+                                def stageNumber = 3
+                                def paragraph = env.PARAGRAPH
+                                paragraph += "\nContent added by Stage ${stageNumber}"
+                                env.PARAGRAPH = paragraph
+                            }
+                        }
+                    }
+                }
+                stage('Stage 4') {
+                    steps {
+                        lock('paragraph-lock') {
+                            script {
+                                def stageNumber = 4
+                                def paragraph = env.PARAGRAPH
+                                paragraph += "\nContent added by Stage ${stageNumber}"
+                                env.PARAGRAPH = paragraph
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            milestone()
+        }
+    }
+}

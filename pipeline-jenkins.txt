@@ -6,32 +6,25 @@ pipeline {
                 script {
                     // Generate random text
                     def randomText = "Random text: " + UUID.randomUUID().toString()
-                    // Store the text in an environment variable for Stage 2 to access
-                    env.RANDOM_TEXT = randomText
+                    // Create a file in the workspace and write the random text
+                    writeFile file: 'shared_file.txt', text: randomText
                     // Echo the initial text for visibility
-                    echo "Initial Text: ${env.RANDOM_TEXT}"
+                    echo "Initial Text: ${randomText}"
                 }
             }
         }
         stage('Stage 2') {
             steps {
-                lock(resource: 'random-text-lock') {
-                    script {
-                        // Access the random text generated in Stage 1
-                        def textToUpdate = env.RANDOM_TEXT
-                        // Echo the text before modification
-                        echo "Text Before Edit: ${textToUpdate}"
-                        // Modify the text
-                        textToUpdate += "\nUpdated by Stage 2"
-                        // Generate a random sleep time between 5 and 15 seconds
-                        def randomSleepTime = (Math.random() * 11) + 5
-                        randomSleepTime = Math.round(randomSleepTime) as int
-                        echo "Sleeping for ${randomSleepTime} seconds"
-                        sleep randomSleepTime
-                        // Update the environment variable with the modified text
-                        env.RANDOM_TEXT = textToUpdate
+                script {
+                    lock(resource: 'shared-file-lock') {
+                        // Read the content of the shared text file from the workspace
+                        def textToUpdate = readFile 'shared_file.txt'
+                        // Modify the text by adding the build number
+                        textToUpdate += "\nUpdated by Stage 2 - Build Number: ${env.BUILD_NUMBER}"
+                        // Write the modified text back to the shared text file in the workspace
+                        writeFile file: 'shared_file.txt', text: textToUpdate
                         // Echo the text after modification
-                        echo "Text After Edit: ${env.RANDOM_TEXT}"
+                        echo "Text After Edit: ${textToUpdate}"
                     }
                 }
             }

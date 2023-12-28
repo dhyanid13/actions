@@ -10,11 +10,6 @@ pipeline {
                     env.RANDOM_TEXT = randomText
                 }
             }
-            post {
-                always {
-                    milestone()
-                }
-            }
         }
         stage('Stage 2') {
             steps {
@@ -24,16 +19,18 @@ pipeline {
                         def textToUpdate = env.RANDOM_TEXT
                         // Modify the text
                         textToUpdate += "\nUpdated by Stage 2"
+                        // Simulate some processing time
+                        sleep 5
                         // Update the environment variable with the modified text
                         env.RANDOM_TEXT = textToUpdate
                     }
                 }
             }
-            post {
-                always {
-                    milestone()
-                }
-            }
+        }
+    }
+    post {
+        always {
+            milestone()
         }
     }
 }

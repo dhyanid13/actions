@@ -1,3 +1,5 @@
+import java.util.concurrent.ThreadLocalRandom
+
 pipeline {
     agent any
     stages {
@@ -8,6 +10,8 @@ pipeline {
                     def randomText = "Random text: " + UUID.randomUUID().toString()
                     // Store the text in an environment variable for Stage 2 to access
                     env.RANDOM_TEXT = randomText
+                    // Echo the initial text for visibility
+                    echo "Initial Text: ${env.RANDOM_TEXT}"
                 }
             }
         }
@@ -17,12 +21,18 @@ pipeline {
                     script {
                         // Access the random text generated in Stage 1
                         def textToUpdate = env.RANDOM_TEXT
+                        // Echo the text before modification
+                        echo "Text Before Edit: ${textToUpdate}"
                         // Modify the text
                         textToUpdate += "\nUpdated by Stage 2"
-                        // Simulate some processing time
-                        sleep 5
+                        // Generate a random sleep time between 5 and 15 seconds
+                        def randomSleepTime = ThreadLocalRandom.current().nextInt(5, 16)
+                        echo "Sleeping for ${randomSleepTime} seconds"
+                        sleep randomSleepTime
                         // Update the environment variable with the modified text
                         env.RANDOM_TEXT = textToUpdate
+                        // Echo the text after modification
+                        echo "Text After Edit: ${env.RANDOM_TEXT}"
                     }
                 }
             }
@@ -34,3 +44,4 @@ pipeline {
         }
     }
 }
+

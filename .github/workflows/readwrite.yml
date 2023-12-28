@@ -1,0 +1,39 @@
+name: Concurrency Group Read Write Text File
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_path:
+        description: 'Path to the text file'
+        required: true
+        default: 'file.txt'
+
+jobs:
+  read_write_text:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: text_file_operations  # Define the concurrency group
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Read from text file
+        run: |
+          # Read content from the specified text file
+          content=$(cat ${{ github.event.inputs.file_path }})
+          echo "Content read from file: $content"
+
+      - name: Write to text file
+        run: |
+          # Modify the content or add new content to the file
+          echo "New content line" >> ${{ github.event.inputs.file_path }}
+          echo "Updated file content: $(cat ${{ github.event.inputs.file_path }})"
+      
+      - name: Commit changes
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add ${{ github.event.inputs.file_path }}
+          git commit -m "Update file via GitHub Actions"
+          git push

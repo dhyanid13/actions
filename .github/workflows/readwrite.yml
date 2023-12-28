@@ -34,6 +34,9 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add ${{ github.event.inputs.file_path }}
-          git commit -m "Update file via GitHub Actions"
-          git push
+          git add $readme_path
+          git commit -m "Update README via GitHub Actions"
+          git remote add origin_with_token https://github.com/${{ github.repository }}.git
+          git push --set-upstream origin_with_token HEAD:${{ github.ref }} --force
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

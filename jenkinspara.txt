@@ -73,3 +73,8 @@ pipeline {
         }
     }
 }
+
+// Change permissions to allow writing
+                            sh "chmod +w /path/to/shared/folder/filename.txt"
+                            // Writing content to a file in a shared folder
+                            sh "echo '${paragraph}' >> /path/to/shared/folder/filename.txt"

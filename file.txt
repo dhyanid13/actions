@@ -1,39 +1,24 @@
-Certainly! Here's a comment summarizing your practical test with Jenkins pipelines:
+Certainly, here's an updated section to address the availability of third-party solutions:
 
----
+**Limitations in GitHub Actions:**
 
-**Practical Test Update: Jenkins Pipeline Implementation**
+1. **Concurrent Job Termination:**
+   - *Current Behavior:* When a new job arrives in the same concurrency group as a running job, GitHub Actions terminates the existing job with the intention of allowing the new job to run immediately.
+   - *Desired State:* The desired behavior is for jobs to wait in line, without terminating currently running jobs, and to execute sequentially once the previous job completes.
 
-Implemented a Jenkins pipeline comprising two stages:
+2. **Lack of Job Queuing:**
+   - *Current Behavior:* GitHub Actions does not provide a built-in job queuing mechanism, resulting in the immediate initiation of the new job, leading to potential interference with the execution order.
+   - *Desired State:* The requirement is for jobs to be queued in the order of arrival, waiting for their turn to execute after the completion of the preceding jobs.
 
-1. **Initializer:** Sets up a shared file.
-2. **ReadWrite:** Performs read/write operations on the shared file and sleeps for 2 minutes.
+3. **Inability to Preserve Job Order:**
+   - *Current Behavior:* The existing concurrency model in GitHub Actions does not inherently support preserving the order of job execution when triggered in parallel.
+   - *Desired State:* The desired state involves preserving the order of job execution, ensuring that jobs are executed in the sequence they were triggered.
 
-Applied a `lock` at the stage level and a `milestone` after it to synchronize access to the shared file. Tested parallel triggers and observed successful synchronization—ensured the second triggers did not enter the second stage until the first operation completed.
+**Third-Party Solutions:**
+While the desired state can be achieved through certain third-party marketplace actions, it is important to note that the current limitations are inherent in the core GitHub Actions functionality. The use of third-party solutions may introduce additional dependencies and complexities to the workflow. Moreover, relying on external solutions may not align with the firm's preference for a native and officially supported feature set.
 
-Conducted a comparative test without using `lock` and `milestone`, resulting in a clear demonstration of race conditions occurring.
+It is recommended to explore third-party options cautiously, considering potential implications related to compatibility, support, and security.
 
-Confirmed: The use of `lock` and `milestone` effectively prevents race conditions, ensuring synchronized execution and data integrity among parallel tasks in Jenkins pipelines.
+These limitations collectively impact our ability to achieve a more controlled and orderly workflow execution, particularly in scenarios where jobs need to wait in a queue and run sequentially without interference.
 
----
-
-Absolutely! Here's a more technical version of your JIRA ticket comment:
-
----
-
-**Technical Test Update: Jenkins Pipeline Implementation**
-
-Implemented a Jenkins pipeline architecture with distinct stages:
-
-1. **Initializer Stage:** Configured the initial setup, establishing a shared file for subsequent operations.
-2. **ReadWrite Stage:** Executed read/write operations on the shared file and incorporated a 2-minute sleep interval.
-
-Applied a `lock` at the stage granularity to enforce exclusive access to the shared file and strategically placed a `milestone` subsequent to the locked section. The aim was to orchestrate synchronization within the pipeline's concurrent sections.
-
-Conducted rigorous testing by triggering parallel operations. Notably, the observed behavior demonstrated effective synchronization, as subsequent triggers refrained from entering the second stage until the completion of the initial operation.
-
-A comparative analysis was also performed, deliberately omitting the `lock` and `milestone` constructs. The outcome starkly revealed the emergence of race conditions, affirming the critical necessity of these mechanisms.
-
-This practical test unequivocally verifies the robustness of `lock` and `milestone` implementations in Jenkins. They decisively avert race conditions, guaranteeing synchronized execution and data coherence across parallel tasks within the pipeline architecture.
-
----
+If there are any further details or adjustments needed, please let me know.

@@ -285,14 +285,46 @@ static_resources:
                       address: <proxy_server_address>
                       port_value: <proxy_server_port>
 ```
-
-**Important Notes:**
-
-1. **TCP Listener and Cluster**: I've added a `tcp_listener` and `tcp_proxy_cluster` to route TCP traffic through your specified proxy. This is separate from the HTTP listener used for your Flask application and JWT handling. This TCP proxy setup is intended to demonstrate how you might configure TCP-level routing, but keep in mind that direct JWKS fetching via this method isn't straightforward without additional network or proxy configurations.
-
-2. **JWT Configuration**: The example assumes JWKS is managed externally (e.g., fetched and updated by application logic or other means) and then configured inline for simplicity in this example. This approach bypasses the need to fetch JWKS via Envoy, given the complexities of routing HTTP JWKS fetch requests through a TCP proxy.
-
-3. **Routing JWKS Requests**: To effectively use this TCP proxy for JWKS fetching, you'd need to ensure external configurations (DNS overrides, proxy configurations) are set up to intercept and route JWKS requests from Envoy through the TCP proxy to Microsoft. This setup depends heavily on your network and proxy capabilities and configurations.
-
-This integrated configuration provides a basic framework for incorporating TCP proxying into your Envoy setup. However, due to the complexity of correctly routing HTTP(S) requests (like JWKS fetching) through a TCP proxy, this solution may require additional network and proxy configuration outside of Envoy to work as intended
-
+def prepare_and_send_extensions_to_kafka(self, cluster_fqdn, inp):
+    """Prepare and send cluster extensions data to Kafka, focusing on individual extensions."""
+    
+    # Ensure the timestamp is set
+    if "timestamp" not in inp:
+        inp["timestamp"] = fh.now_ymd_hms_utc_iso8601()  # Set default timestamp if missing
+    
+    # Initialize the data structure for Kafka with basic cluster info
+    kafka_data = {
+        "cluster_fqdn": str(cluster_fqdn),
+        "eonid": int(inp["eonid"]),
+        "provider": str(inp["provider"]),
+        "env": str(inp["env"]),
+        "timestamp": inp["timestamp"],
+        "extensions": [],  # Prepare to populate this list with extension details
+    }
+    
+    # Optionally, handle lifecycle if it's part of your structure
+    if "lifecycle" in inp:
+        kafka_data["lifecycle"] = str(inp["lifecycle"])
+    
+    # Iterate over each extension in the inp['extensions'] list
+    for extension in inp.get("extensions", []):
+        # For each extension, create a dictionary of its details
+        extension_details = {
+            "name": extension.get("name"),
+            "version": extension.get("version"),
+            # Assuming parameters and data are structured appropriately for direct inclusion
+            "parameters": extension.get("parameters", []),
+            "data": extension.get("data", {})
+        }
+        # Add this dictionary to the 'extensions' list in the kafka_data
+        kafka_data["extensions"].append(extension_details)
+    
+    # Convert kafka_data to a JSON string for sending
+    kafka_message = json.dumps(kafka_data)
+    
+    # Retrieve the Kafka topic from configuration and send the message
+    topic = fh.cfg('kafka_topics')["deployed_extensions"]  # Adjust the topic as necessary
+    self.kafka_connection.produce(kafka_message, topic)
+    
+    # Optionally, return a status or the kafka_message for logging/verification
+    return {"status": "Message sent to Kafka", "message": kafka_message}

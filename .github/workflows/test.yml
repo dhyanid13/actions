@@ -66,3 +66,44 @@ jobs:
     steps:
       - name: Dummy Step 6
         run: echo "Running stage 6, independent"
+
+
+
+
+def prepare_and_send_extensions_to_kafka(self, cluster_fqdn, inp):
+    """Prepare and send cluster extensions data to Kafka, focusing on individual extensions."""
+    
+    # Ensure the timestamp is set
+    if "timestamp" not in inp:
+        inp["timestamp"] = fh.now_ymd_hms_utc_iso8601()  # Set default timestamp if missing
+
+    # Initialize a list to hold each "flattened" extension record for Kafka
+    flattened_extensions = []
+
+    # Iterate over each extension in the inp['extensions'] list
+    for extension in inp.get("extensions", []):
+        # For each extension, prepare a record with cluster and extension details
+        record = {
+            "cluster_fqdn": str(cluster_fqdn),
+            "eonid": int(inp["eonid"]),
+            "provider": str(inp["provider"]),
+            "env": str(inp["env"]),
+            "extensions": extension.get("name"),
+            "version": extension.get("version"),
+            # Convert parameters to a JSON string or set to None if empty
+            "parameter": json.dumps(extension.get("parameters")) if extension.get("parameters") else None,
+            # Set data to None or an empty dict as needed (assuming you always want it to be None here)
+            "data": None
+        }
+        # Add the prepared record to the list of flattened extensions
+        flattened_extensions.append(record)
+
+    # Convert the list of flattened extension records to a JSON string for sending
+    kafka_message = json.dumps(flattened_extensions)
+
+    # Retrieve the Kafka topic from configuration and send the message
+    topic = fh.cfg('kafka_topics')["deployed_extensions"]  # Adjust the topic as necessary
+    self.kafka_connection.produce(kafka_message, topic)
+
+    # Optionally, return a status or the kafka_message for logging/verification
+    return {"status": "Message sent to Kafka", "message": kafka_message}

@@ -107,3 +107,49 @@ def prepare_and_send_extensions_to_kafka(self, cluster_fqdn, inp):
 
     # Optionally, return a status or the kafka_message for logging/verification
     return {"status": "Message sent to Kafka", "message": kafka_message}
+
+
+    "extensions": {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "Name of the extension"
+            },
+            "version": {
+                "type": "string",
+                "description": "Version of the extension"
+            },
+            "parameters": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name of the parameter"
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Value of the parameter"
+                        }
+                    },
+                    "required": ["name", "value"],
+                    "additionalProperties": false
+                },
+                "description": "Parameters of the extension"
+            },
+            "data": {
+                "type": "object",
+                "description": "Additional data for the extension",
+                "additionalProperties": true  // Set to false if you want to strictly control the properties within 'data'
+            }
+        },
+        "required": ["name", "version"],
+        "additionalProperties": false
+    },
+    "description": "List of extensions"
+}
+

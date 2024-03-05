@@ -284,47 +284,23 @@ static_resources:
                     socket_address:
                       address: <proxy_server_address>
                       port_value: <proxy_server_port>
-```
-def prepare_and_send_extensions_to_kafka(self, cluster_fqdn, inp):
-    """Prepare and send cluster extensions data to Kafka, focusing on individual extensions."""
-    
-    # Ensure the timestamp is set
-    if "timestamp" not in inp:
-        inp["timestamp"] = fh.now_ymd_hms_utc_iso8601()  # Set default timestamp if missing
-    
-    # Initialize the data structure for Kafka with basic cluster info
-    kafka_data = {
-        "cluster_fqdn": str(cluster_fqdn),
-        "eonid": int(inp["eonid"]),
-        "provider": str(inp["provider"]),
-        "env": str(inp["env"]),
-        "timestamp": inp["timestamp"],
-        "extensions": [],  # Prepare to populate this list with extension details
-    }
-    
-    # Optionally, handle lifecycle if it's part of your structure
-    if "lifecycle" in inp:
-        kafka_data["lifecycle"] = str(inp["lifecycle"])
-    
-    # Iterate over each extension in the inp['extensions'] list
-    for extension in inp.get("extensions", []):
-        # For each extension, create a dictionary of its details
-        extension_details = {
-            "name": extension.get("name"),
-            "version": extension.get("version"),
-            # Assuming parameters and data are structured appropriately for direct inclusion
-            "parameters": extension.get("parameters", []),
-            "data": extension.get("data", {})
-        }
-        # Add this dictionary to the 'extensions' list in the kafka_data
-        kafka_data["extensions"].append(extension_details)
-    
-    # Convert kafka_data to a JSON string for sending
-    kafka_message = json.dumps(kafka_data)
-    
-    # Retrieve the Kafka topic from configuration and send the message
-    topic = fh.cfg('kafka_topics')["deployed_extensions"]  # Adjust the topic as necessary
-    self.kafka_connection.produce(kafka_message, topic)
-    
-    # Optionally, return a status or the kafka_message for logging/verification
-    return {"status": "Message sent to Kafka", "message": kafka_message}
+def normalize_parameters(parameters):
+    # If parameters is None or empty, return an empty list
+    if not parameters:
+        return []
+    # If parameters is already a list, return as-is
+    elif isinstance(parameters, list):
+        return parameters
+    # If parameters is a single dictionary/object, wrap it in a list
+    elif isinstance(parameters, dict):
+        # Check if it's a singular object or key-value pairs
+        # Assuming key-value pairs means a flat dictionary, not nested
+        if all(not isinstance(value, dict) for value in parameters.values()):
+            # Convert key-value pairs into a list containing one object
+            return [parameters]
+        else:
+            # Handle nested objects differently if necessary
+            return [parameters]
+    else:
+        # Placeholder for handling other unexpected formats (e.g., string representations)
+        return []

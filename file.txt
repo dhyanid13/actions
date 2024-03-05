@@ -284,23 +284,18 @@ static_resources:
                     socket_address:
                       address: <proxy_server_address>
                       port_value: <proxy_server_port>
+
 def normalize_parameters(parameters):
-    # If parameters is None or empty, return an empty list
-    if not parameters:
-        return []
-    # If parameters is already a list, return as-is
-    elif isinstance(parameters, list):
-        return parameters
-    # If parameters is a single dictionary/object, wrap it in a list
+    # Check if parameters is explicitly None or an empty list/dict
+    if parameters in [None, [], {}]:
+        return None  # Return None if parameters are not provided or empty
+    # If parameters is a dict, convert to list of {name, value} objects
     elif isinstance(parameters, dict):
-        # Check if it's a singular object or key-value pairs
-        # Assuming key-value pairs means a flat dictionary, not nested
-        if all(not isinstance(value, dict) for value in parameters.values()):
-            # Convert key-value pairs into a list containing one object
-            return [parameters]
-        else:
-            # Handle nested objects differently if necessary
-            return [parameters]
+        return [{"name": key, "value": parameters[key]} for key in parameters]
+    # If parameters is already a list, return as is
+    elif isinstance(parameters, list):
+        # Further check if items in the list are dicts with 'name' and 'value' keys to avoid double serialization later
+        return parameters
+    # Add more conditions here if there are other formats to handle
     else:
-        # Placeholder for handling other unexpected formats (e.g., string representations)
-        return []
+        return None

@@ -299,3 +299,33 @@ def normalize_parameters(parameters):
     # Add more conditions here if there are other formats to handle
     else:
         return None
+
+
+
+
+
+class ReleaseInfoController:
+    # Existing __init__ and other methods remain unchanged
+
+    def search_release_info(self, only_latest=False, **kwargs):
+        """Read release_info entry(s). Will return list of entries unless only_latest is True, 
+        then returns the most recent entry. Raises on error if no entry."""
+        search_filter = {}
+        
+        # Construct search filter based on provided kwargs
+        for parameter in ("release_component", "environment", "provider", "release_name", "release_status"):
+            if parameter in kwargs and kwargs[parameter] is not None:
+                search_filter[parameter] = kwargs[parameter]
+        
+        if only_latest:
+            # Sort by '_id' to utilize ObjectId's timestamp component for fetching the latest document
+            latest_entry = list(self.db_model.release_status.find(search_filter).sort('_id', -1).limit(1))
+            if latest_entry:
+                return latest_entry[0]  # Return the single latest document
+            else:
+                return None
+        else:
+            return list(self.db_model.release_status.find(search_filter))
+
+    # Adjust the kafka_notification and other relevant methods to specify only_latest=True when needed
+

@@ -58,3 +58,149 @@ pipeline {
         }
     }
 }
+import os
+import subprocess
+import click
+from pathlib import Path
+
+class DockerManager:
+    def __init__(self):
+        self.setup_env()
+
+    @property
+    def user(self):
+        return os.getenv('USER')
+
+    @property
+    def cinitccname(self):
+        return os.getenv('CINITCCNAME')
+
+    @cinitccname.setter
+    def cinitccname(self, value):
+        os.environ['CINITCCNAME'] = value
+
+    @property
+    def docker_host(self):
+        return os.getenv('DOCKER_HOST')
+
+    @property
+    def docker_cert_path(self):
+        return os.getenv('DOCKER_CERT_PATH')
+
+    @property
+    def workspace(self):
+        return os.getenv('WORKSPACE')
+
+    @property
+    def cloud_deploy_version(self):
+        return os.getenv('CLOUD_DEPLOY_VERSION', '2024.05.16-89')
+
+    def setup_env(self):
+        ticket_path = Path(f"/var/spool/tickets/{self.user}")
+        if ticket_path.is_file() and ticket_path.stat().st_size > 0:
+            self.cinitccname = f"/var/spool/certs/{self.user}"
+        else:
+            print(f"Error: /var/spool/certs/{self.user} must exist to get client certs.")
+            exit(1)
+
+        cinitccname_path = Path(self.cinitccname)
+        if not cinitccname_path.is_dir():
+            print(f"Error: {self.cinitccname} must exist to get client certs.")
+            exit(1)
+
+        os.environ['DOCKER_TLS_VERIFY'] = "1"
+        os.environ['DOCKER_HOST'] = f"tcp://{os.uname().nodename}:2376"
+        os.environ['DOCKER_CERT_PATH'] = self.cinitccname
+        os.environ['GIT_SSL_CERT'] = f"{self.cinitccname}/cert.pem"
+        os.environ['GIT_SSL_KEY'] = f"{self.cinitccname}/key.pem"
+        os.environ['GIT_HTTP_PROXY_AUTHMETHOD'] = "negotiate"
+        os.environ['GIT_SSL_NO_VERIFY'] = "false"
+
+        workspace_path = Path("/var/tmp/k8s-cloud-deploy")
+        if not workspace_path.exists():
+            workspace_path.mkdir(parents=True, exist_ok=True)
+        os.environ['WORKSPACE'] = str(workspace_path)
+
+    def run_docker_command(self, cmd):
+        try:
+            subprocess.run(cmd, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            click.echo(f"Error executing command: {e}")
+
+    def status(self, container_name):
+        cmd = f"docker inspect --format '{{{{.State.Running}}}}' {container_name}"
+        status_result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if status_result.stdout.strip() == 'true':
+            click.echo(f"Container {container_name} is running.")
+            return True
+        else:
+            click.echo(f"Container {container_name} is stopped.")
+            return False
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+@click.option('--container-name', '-c', default='cloud_deploy_container', help='Name of the Docker container')
+@click.option('--worker-concurrency', '-w', default='4', help='Number of worker concurrency')
+@click.option('--mongo-connection-string', '-m', required=True, help='MongoDB connection string')
+def start(container_name, worker_concurrency, mongo_connection_string):
+    manager = DockerManager()
+    if manager.status(container_name):
+        click.echo(f"Container {container_name} is already running.")
+        return
+
+    cmd = (
+        f"docker run -d --name {container_name} "
+        f"--cap-drop=NET_BIND_SERVICE "
+        f"--cap-drop=SETGID "
+        f"--cap-drop=SETUID "
+        f"-e CINITCCNAME={manager.cinitccname} "
+        f"-e CLOUD_DEPLOY_KBS_BASELINE_IMAGE=cloud/k8s-baseline "
+        f"-e CLOUD_DEPLOY_CONNECTION_STRING={mongo_connection_string} "
+        f"-e CLOUD_DEPLOY_SSL_CLIENT_CERT_FILE={manager.cinitccname}/cert.pem "
+        f"-e CLOUD_DEPLOY_SSL_CLIENT_CERT_KEY_FILE={manager.cinitccname}/combined-cert-key.pem "
+        f"-e CLOUD_DEPLOY_SSL_CLIENT_KEY_FILE={manager.cinitccname}/key.pem "
+        f"-e CLOUD_DEPLOY_KBS_WORKSPACE_DIR={manager.workspace} "
+        f"-e CLOUD_DEPLOY_WORKER_LABELS=['k8s'] "
+        f"-e KRB5CCNAME={manager.cinitccname} "
+        f"-e USER={manager.user} "
+        f"-e CLOUD_DEPLOY_WORKER_CONCURRENCY={worker_concurrency} "
+        f"--network=host "
+        f"--security-opt=no-new-privileges "
+        f"-u {os.getuid()}:{os.getgid()} "
+        f"-v {manager.cinitccname}:{manager.cinitccname}:ro "
+        f"-v {manager.workspace}:{manager.workspace}:rw "
+        f"-v /etc/nsswitch.conf:/etc/nsswitch.conf:ro "
+        f"-v /var/db:/var/db:ro "
+        f"msde/cloud:{manager.cloud_deploy_version} "
+        f"bin/run-worker.sh"
+    )
+    manager.run_docker_command(cmd)
+    click.echo(f"Container {container_name} started.")
+
+@cli.command()
+@click.option('--container-name', '-c', default='cloud_deploy_container', help='Name of the Docker container')
+def stop(container_name):
+    manager = DockerManager()
+    if not manager.status(container_name):
+        click.echo(f"Container {container_name} is already stopped.")
+        return
+
+    manager.run_docker_command(f"docker stop {container_name}")
+    click.echo(f"Container {container_name} stopped.")
+
+@cli.command()
+@click.option('--container-name', '-c', default='cloud_deploy_container', help='Name of the Docker container')
+def restart(container_name):
+    manager = DockerManager()
+    if not manager.status(container_name):
+        click.echo(f"Container {container_name} is stopped. Starting it...")
+        start(container_name, worker_concurrency)
+    else:
+        manager.run_docker_command(f"docker restart {container_name}")
+        click.echo(f"Container {container_name} restarted.")
+
+if __name__ == "__main__":
+    cli()
